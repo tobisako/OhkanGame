@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<application xmlns="http://ns.adobe.com/air/application/14.0">
+  <id>TobiSyazaiFlashFRAME</id>
+  <versionNumber>1.0</versionNumber>
+  <filename>TobiSyazaiFlashFRAME</filename>
+  <name>
+    <text xml:lang="ja">TobiSyazaiFlashFRAME</text>
+  </name>
+  <initialWindow>
+    <title>TobiSyazaiFlashFRAME</title>
+    <content>TobiSyazaiFlash.swf</content>
+    <systemChrome>standard</systemChrome>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <minimizable>true</minimizable>
+    <maximizable>true</maximizable>
+    <resizable>true</resizable>
+    <fullScreen>false</fullScreen>
+    <renderMode>direct</renderMode>
+    <x>10</x>
+    <y>10</y>
+    <width>540</width>
+    <height>960</height>
+  </initialWindow>
+  <!-- 
+	More options:
+	http://livedocs.adobe.com/flex/3/html/File_formats_1.html#1043413
+	-->
+  <allowBrowserInvocation>false</allowBrowserInvocation>
+  <supportedLanguages>ja</supportedLanguages>
+  <copyright>Tobi</copyright>
+  <description>
+    <text xml:lang="ja">
+    </text>
+  </description>
+  <customUpdateUI>false</customUpdateUI>
+  <icon>
+    <image40x40>icons/TobiSyazaiFlash40.png</image40x40>
+  </icon>
+</application>

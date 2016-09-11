@@ -1,0 +1,134 @@
+package parts 
+{
+//	import flash.media.Video;
+	import fl.video.FLVPlayback;
+	import fl.video.VideoEvent;
+	import fl.video.MetadataEvent;
+	import flash.display.Sprite;
+	import flash.events.Event;
+
+	// パフォーマンスが悪い為、「FLVPlayback」は使用を中止する。
+	
+	/**
+	 * 謝罪の王様・ビデオ再生用クラス（FLVPlaybackのラッパー）
+	 * １回ロードしたmp4ファイルを、再ロードせずに無制限に使いまわす事を前提とした実装。
+	 * 安定して再生が開始されるまでは、画面表示されない特殊仕様。
+	 * これにより「シークちらつき（一瞬、最後尾画像が表示される」を防ぐ。
+	 * （プリロード再生機能も搭載）
+	 * @author tobisako
+	 */
+	//public class VideoParts extends FLVPlayback
+	public class VideoFLVPlaybackParts extends Sprite
+	{
+		private var playedCallBackFunc:Function;	// 再生が安定開始した事を通知するＣＢ
+		private var playCompleteCallBackFunc:Function;	// 再生が終了した事を通知するＣＢ
+		private var bPlayed:Boolean;
+		private var fp:FLVPlayback;
+		private var bMask:Boolean;
+
+		// コンストラクタ
+		public function VideoFLVPlaybackParts(m:Boolean = false, cb1:Function = null, cb2:Function = null) 
+		{
+			bMask = m;
+			fp = new FLVPlayback();
+			playedCallBackFunc = cb1;			// コールバック登録
+			playCompleteCallBackFunc = cb2;
+			fp.addEventListener(MetadataEvent.CUE_POINT, cp_listener);	// キューポイントＣＢ登録
+			fp.addEventListener(VideoEvent.COMPLETE, videoCompleteCallback);	// ビデオ再生終了時ＣＢ登録
+			addEventListener(Event.ADDED_TO_STAGE, addedToStage);
+		}
+
+		// addChild()された時に呼び出されるコールバック（起動時１回しか呼び出されない）
+		private function addedToStage(event:Event):void 
+		{
+			fp.y = 24;
+			this.addChild( fp );
+
+			if(bMask) {
+				// 背景マスキングする
+				var mask_sp:Sprite = new Sprite();
+				var r_sp:Sprite = new Sprite();
+				r_sp.graphics.beginFill(0x000000);
+				r_sp.graphics.drawRect(0, 190, 1020, 425);
+				r_sp.graphics.endFill();
+				mask_sp.addChild(r_sp);
+				addChild(mask_sp);
+				this.mask = mask_sp;
+			}
+		}
+		
+		// ムービー再生完了コールバック
+		private function videoCompleteCallback(e:Event):void {
+			if (playCompleteCallBackFunc != null) playCompleteCallBackFunc();	// CB呼び出し
+		}
+
+		// 「setSize()」関数
+		public function setSize(x:int, y:int):void {
+			fp.setSize(x, y);
+		}
+
+		// 「setVolume()」関数
+		public function setVolume(v:Number):void {
+			fp.volume = v;
+		}
+
+		// 「load」関数（FLVPlaybackのマネ）
+		public function load(source:String, totalTime:Number = NaN, isLive:Boolean = false):void {
+			fp.load( source, totalTime, isLive );
+			fp.autoPlay = false;
+			fp.visible = false;
+			// 安定再生用キューポイント・コールバック登録
+			fp.addASCuePoint( 0.1, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.2, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.3, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.4, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.5, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.6, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.7, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.8, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 0.9, "played" );		// 安定再生確認ポイント
+			fp.addASCuePoint( 1, "playedchkend" );	// 安定再生確認ポイント（チェック終了）
+		}
+
+		// 「play()」です。
+		public function play():void {
+			playAndHide();
+		}
+		
+		// 再生開始し、一定時間経過後、映像を隠しつつ再生を続ける関数
+		public function playAndHide(startTime:Number = 0.0, hideTime:Number = 0.0, cb:Function = null):void {
+			// コールバック登録があれば、行う。
+			playedCallBackFunc = cb;	// コールバック登録
+
+			// 各種キューポイント・コールバック設定
+			if(hideTime != 0.0) fp.addASCuePoint( hideTime, "hide" );		// 隠すコールバック発生ポイント
+
+			// 再生開始
+			fp.seek( startTime );		// 先頭から再生
+			fp.play();
+			bPlayed = false;
+		}
+		
+		// 「stop()」関数
+		public function stop():void {
+			fp.stop();
+		}
+
+		// キューポイント・コールバック
+		private function cp_listener(eventObject:MetadataEvent):void { 
+			if (bPlayed) {
+				if ( eventObject.info.name == "hide" ) {	// 映像を隠す（音声再生は続ける）
+					fp.visible = false;
+				}
+			} else {
+				if ( eventObject.info.name == "played" ) {	// 安定再生開始したコールバック
+					bPlayed = true;
+					fp.visible = true;
+					// 安定動作コールバック呼び出し
+					if(playedCallBackFunc != null) playedCallBackFunc();
+				}
+			}
+		}
+		// 再生終了コールバックは、好きに貼って貰うことにする。
+	}
+}
